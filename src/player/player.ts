@@ -81,8 +81,13 @@ export class Player {
     const m = Math.hypot(mx, mz);
     if (m > 1) { mx /= m; mz /= m; }
     const speed = SPEED * (this.inWater ? 0.6 : 1);
+    // Base del movimiento, derivada de hacia donde mira la camara:
+    //   adelante = (-sin yaw, -cos yaw)      derecha = (cos yaw, -sin yaw)
+    //   v = mz * adelante + mx * derecha
+    // El signo de Z es facil de equivocar y no lo delata la distancia
+    // recorrida, solo la direccion: por eso lo cubre test-world.mjs.
     this.vel.x = (mx * cos - mz * sin) * speed;
-    this.vel.z = (mx * sin + mz * cos) * speed;
+    this.vel.z = -(mx * sin + mz * cos) * speed;
 
     // --- vertical
     if (this.inWater) {
