@@ -5,7 +5,7 @@
  *
  * Los tamaños son constantes con nombre porque son requisitos, no estética.
  */
-import { installTouchRouter, type Rect, type TouchRouter } from './touch.ts';
+import { classifyTouch, installTouchRouter, type Rect, type TouchRouter } from './touch.ts';
 import { BLOCKS, PALETTE, BLOCK_TILES } from '../world/blocks.ts';
 import { buildTileArray, TILE_SIZE } from '../world/atlas.ts';
 
@@ -254,6 +254,78 @@ export function createControls(): Controls {
     },
   });
 
+  // ------------------------------------------------------------------- raton
+  /**
+   * Los botones tienen `pointer-events: none` para que el enrutador tactil los
+   * resuelva por coordenadas sobre el canvas, que es lo que permite pulsarlos
+   * a la vez que el joystick. El efecto secundario es que con un raton no
+   * recibian absolutamente nada: en un portatil los tres botones eran adorno.
+   *
+   * Aqui se hace la misma prueba de impacto que hace el enrutador tactil, con
+   * la misma funcion, para que raton y dedo no puedan divergir.
+   */
+  function installMouse(canvas: HTMLElement): () => void {
+    let dragging = false;
+    let held = -1;
+
+    const hit = (e: MouseEvent) =>
+      classifyTouch(
+        { identifier: -1, clientX: e.clientX, clientY: e.clientY },
+        window.innerWidth, window.innerHeight,
+        buttons.map(rectOf), rectOf(palette),
+      );
+
+    const releaseHeld = () => {
+      if (held < 0) return;
+      buttons[held]?.classList.remove('down');
+      if (held === BTN_JUMP) input.jump = false;
+      held = -1;
+    };
+
+    const onDown = (e: MouseEvent) => {
+      const { zone, button } = hit(e);
+      if (zone === 'ignore') return;             // la paleta la maneja el DOM
+      if (zone === 'button') {
+        held = button;
+        buttons[button]?.classList.add('down');
+        if (button === BTN_JUMP) input.jump = true;
+        else if (button === BTN_BREAK) input.breakPressed = true;
+        else if (button === BTN_PLACE) input.placePressed = true;
+        e.preventDefault();
+        return;
+      }
+      // Fuera de los botones, el raton es mirada + romper/poner. La zona del
+      // joystick no aplica: en el escritorio se camina con el teclado.
+      dragging = true;
+      if (e.button === 0) input.breakPressed = true;
+      if (e.button === 2) input.placePressed = true;
+    };
+
+    const onMove = (e: MouseEvent) => {
+      if (!dragging) return;
+      input.lookDX -= e.movementX * 0.0042;
+      input.lookDY -= e.movementY * 0.0042;
+    };
+
+    const onUp = () => { dragging = false; releaseHeld(); };
+    // Si el raton se suelta fuera de la ventana, el salto quedaria pulsado.
+    const onLeave = () => { dragging = false; releaseHeld(); };
+
+    canvas.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('blur', onLeave);
+
+    return () => {
+      canvas.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('blur', onLeave);
+    };
+  }
+
+  const removeMouse = installMouse(document.getElementById('game')!);
+
   return {
     input,
     consumeEdges() {
@@ -264,6 +336,7 @@ export function createControls(): Controls {
     root,
     dispose() {
       router.dispose();
+      removeMouse();
       root.remove();
       style.remove();
     },

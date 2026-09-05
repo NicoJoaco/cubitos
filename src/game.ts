@@ -64,7 +64,7 @@ export async function createGame(
 
   const player = new Player();
   const controls = createControls();
-  const removeKeyboard = installKeyboard(controls.input, canvas);
+  const removeKeyboard = installKeyboard(controls.input);
   const getBlock = (x: number, y: number, z: number) => world.getBlock(x, y, z);
   const pause = createPauseMenu(() => setPaused(false));
 

@@ -199,6 +199,13 @@ encontraría. Para empezar de cero, borrá los datos del sitio (paso 4 de arriba
 - **Paleta**, arriba: 10 cubos, se desliza de lado, un toque para elegir.
 - **Atrás**: pausa (no cierra el juego).
 
+En una computadora (para probarlo antes de instalarlo):
+
+- **W A S D** o las flechas para caminar, **espacio** para saltar.
+- **Arrastrar con el mouse** para mirar alrededor.
+- **Clic izquierdo** rompe, **clic derecho** pone, apuntando con el retículo del
+  centro. Los tres botones redondos también funcionan con el mouse.
+
 Hay escalón automático: caminar contra un desnivel de un bloque lo sube solo, sin
 tener que saltar. Y en el agua se flota, no se queda atrapado en el fondo.
 

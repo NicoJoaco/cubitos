@@ -1,13 +1,14 @@
 /**
- * Adaptador de teclado y ratón. No es para el teléfono: es para poder probar
- * el juego en un portátil sin pantalla táctil (y para que un adulto le muestre
- * el juego al niño antes de instalarlo).
+ * Teclado. No es para el telefono: es para probar el juego en un portatil sin
+ * pantalla tactil, y para que un adulto se lo muestre al nino antes de
+ * instalarlo.
+ *
+ * El raton lo maneja controls.ts, que es quien sabe donde estan los botones.
  */
 import type { InputState } from './controls.ts';
 
-export function installKeyboard(input: InputState, canvas: HTMLElement): () => void {
+export function installKeyboard(input: InputState): () => void {
   const down = new Set<string>();
-  let dragging = false;
 
   const key = (e: KeyboardEvent, isDown: boolean) => {
     const k = e.key.toLowerCase();
@@ -19,30 +20,19 @@ export function installKeyboard(input: InputState, canvas: HTMLElement): () => v
   };
   const kd = (e: KeyboardEvent) => key(e, true);
   const ku = (e: KeyboardEvent) => key(e, false);
-
-  const md = (e: MouseEvent) => {
-    dragging = true;
-    if (e.button === 0) input.breakPressed = true;
-    if (e.button === 2) input.placePressed = true;
+  // Si el navegador pierde el foco, las teclas se quedarian "pegadas".
+  const blur = () => {
+    down.clear();
+    input.moveX = 0; input.moveY = 0; input.jump = false;
   };
-  const mm = (e: MouseEvent) => {
-    if (!dragging) return;
-    input.lookDX -= e.movementX * 0.0042;
-    input.lookDY -= e.movementY * 0.0042;
-  };
-  const mu = () => { dragging = false; };
 
   window.addEventListener('keydown', kd);
   window.addEventListener('keyup', ku);
-  canvas.addEventListener('mousedown', md);
-  window.addEventListener('mousemove', mm);
-  window.addEventListener('mouseup', mu);
+  window.addEventListener('blur', blur);
 
   return () => {
     window.removeEventListener('keydown', kd);
     window.removeEventListener('keyup', ku);
-    canvas.removeEventListener('mousedown', md);
-    window.removeEventListener('mousemove', mm);
-    window.removeEventListener('mouseup', mu);
+    window.removeEventListener('blur', blur);
   };
 }
