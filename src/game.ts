@@ -3,6 +3,7 @@ import { createViewport, type Viewport } from './render/renderer.ts';
 import { createVoxelMaterial, type VoxelMaterial } from './render/materials.ts';
 import { createTileTexture } from './world/atlas.ts';
 import { World } from './world/world.ts';
+import { findSpawn } from './world/chunk.ts';
 import { CHUNK_X, RENDER_DISTANCE_DEFAULT } from './world/constants.ts';
 import { Block } from './world/blocks.ts';
 import { createLoop, type Loop } from './core/loop.ts';
@@ -186,11 +187,14 @@ export async function createGame(
 
   // --- carga inicial: se insiste hasta que el anillo visible está mallado,
   //     cediendo el hilo para que la barra de carga se siga animando.
-  const spawnX = session.player?.x ?? 8.5;
-  const spawnZ = session.player?.z ?? 8.5;
+  // Un mundo nuevo aparece en tierra firme, no en mitad del oceano. Con una
+  // partida guardada se retoma donde se dejo.
+  const spawn = session.player
+    ? { x: session.player.x, z: session.player.z }
+    : findSpawn(seed);
   const target = (2 * world.renderDistance + 1) ** 2;
   for (let i = 0; i < 400; i++) {
-    world.update(spawnX, spawnZ, 16);
+    world.update(spawn.x, spawn.z, 16);
     onProgress?.(0.15 + 0.8 * Math.min(1, world.stats().chunks / target), 'Construyendo el mundo…');
     if (world.generatedLastFrame === 0 && world.meshedLastFrame === 0) break;
     if (i % 4 === 3) await new Promise((r) => setTimeout(r, 0));
@@ -203,7 +207,7 @@ export async function createGame(
     player.pitch = session.player.pitch;
     controls.input.selected = session.player.selected;
   } else {
-    player.pos.set(8.5, world.columnTop(8, 8), 8.5);
+    player.pos.set(spawn.x + 0.5, world.columnTop(spawn.x, spawn.z), spawn.z + 0.5);
     player.yaw = 0.6;
   }
 

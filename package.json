@@ -15,10 +15,11 @@
     "bench:cpu": "node scripts/bench-cpu.mjs",
     "test:controls": "node scripts/test-controls.mjs",
     "test:storage": "node scripts/test-storage.mjs",
-    "test": "node scripts/test-controls.mjs && node scripts/test-storage.mjs && node scripts/test-quality.mjs && node scripts/sw-offline-test.mjs",
+    "test": "node scripts/test-controls.mjs && node scripts/test-storage.mjs && node scripts/test-quality.mjs && node scripts/test-world.mjs && node scripts/sw-offline-test.mjs",
     "test:quality": "node scripts/test-quality.mjs",
     "icons:android": "node scripts/gen-icons.mjs --android",
-    "cap:config": "node scripts/gen-capacitor-config.mjs"
+    "cap:config": "node scripts/gen-capacitor-config.mjs",
+    "test:world": "node scripts/test-world.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "^6.2.2",

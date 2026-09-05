@@ -127,3 +127,41 @@ export function generateChunk(chunk: Chunk, seed: number): void {
   chunk.dirty = true;
   chunk.modified = false;
 }
+
+/**
+ * Busca un sitio decente para aparecer: tierra firme, con holgura sobre el mar
+ * y fuera del desierto.
+ *
+ * Sin esto, una semilla al azar puede dejar al jugador en mitad del oceano,
+ * hundiendose en agua azul sin nada que construir a la vista. Para un nino de
+ * 4 anos eso no es "explorar", es que el juego esta roto.
+ *
+ * Sale barato porque surfaceHeight y biomeAt son funciones puras de la semilla:
+ * se consultan sin generar ni un chunk.
+ */
+export function findSpawn(seed: number): { x: number; z: number } {
+  const MARGIN = 3;          // bloques de holgura sobre el nivel del mar
+  const STEP = 6;            // muestreo grueso: no hace falta mirar columna a columna
+  const MAX_RINGS = 90;      // ~540 bloques de busqueda
+
+  let fallback: { x: number; z: number } | null = null;
+
+  for (let ring = 0; ring < MAX_RINGS; ring++) {
+    const r = ring * STEP;
+    // Perimetro del anillo; el anillo 0 es un solo punto.
+    for (let i = 0; i < Math.max(1, ring * 8); i++) {
+      const t = (i / Math.max(1, ring * 8)) * Math.PI * 2;
+      const x = Math.round(Math.cos(t) * r);
+      const z = Math.round(Math.sin(t) * r);
+      const h = surfaceHeight(x, z, seed);
+      if (h < SEA_LEVEL + MARGIN) continue;
+
+      // La pradera es el mejor sitio para empezar: hay arboles, y madera y
+      // hojas son de lo primero que un nino quiere romper.
+      if (biomeAt(x, z, seed) === 0) return { x, z };
+      if (!fallback) fallback = { x, z };
+    }
+  }
+
+  return fallback ?? { x: 8, z: 8 };
+}
