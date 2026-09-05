@@ -20,10 +20,11 @@ en horizontal, sin barra de direcciones.
 
 **La URL es:** `https://<TU-USUARIO>.github.io/<TU-REPO>/`
 
-> Todavía no está publicada. Sale sola en cuanto subas el repo a GitHub y actives
-> Pages: **Settings → Pages → Source: GitHub Actions**. El workflow
-> `.github/workflows/deploy.yml` publica en cada push a `main`, y la URL exacta
-> aparece al final del job, en el paso *deploy*.
+> Sale sola en cuanto subas el repo a GitHub: el workflow activa Pages por API
+> la primera vez (`enablement: true`), así que no hay que tocar nada en Settings.
+> Si la organización lo prohíbe, se activa a mano en
+> **Settings → Pages → Source: GitHub Actions** y se relanza el workflow.
+> La URL exacta aparece en **Settings → Pages** y al final del job *deploy*.
 
 Con la URL en la mano, en el teléfono del niño:
 

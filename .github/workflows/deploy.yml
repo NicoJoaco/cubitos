@@ -57,7 +57,13 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # enablement: activa GitHub Pages por API si todavia no lo esta. Sin esto,
+      # el primer push a un repo recien creado falla aqui con "Get Pages site
+      # failed" y hay que ir a Settings a activarlo a mano.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
