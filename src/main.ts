@@ -6,9 +6,30 @@ import { loadSession } from './core/session.ts';
 import { initAudio, resumeAudio } from './audio/sfx.ts';
 import { NoWebGL2Error } from './render/renderer.ts';
 
-// autoUpdate: el SW nuevo toma control solo. Al recargar, el niño ya tiene la
-// versión nueva sin ver ningún diálogo.
+// autoUpdate: el Service Worker nuevo se instala y toma el control solo.
 registerSW({ immediate: true });
+
+/**
+ * Pero tomar el control no cambia el JavaScript que YA se está ejecutando: la
+ * pestaña abierta sigue con el código viejo hasta la siguiente recarga. En un
+ * juego para un niño de 4 años eso significa que una corrección puede tardar
+ * días en llegarle, porque nadie va a recargar dos veces a propósito.
+ *
+ * Al cambiar el controlador se recarga una vez, y sólo una:
+ *  - `refreshing` corta cualquier posibilidad de bucle;
+ *  - si al cargar no había controlador, este evento es el de la PRIMERA
+ *    instalación (lo dispara clientsClaim), y ahí recargar sería gratuito y
+ *    molesto.
+ */
+if ('serviceWorker' in navigator) {
+  const hadController = !!navigator.serviceWorker.controller;
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || refreshing) return;
+    refreshing = true;
+    location.reload();
+  });
+}
 
 const params = new URLSearchParams(location.search);
 const forcedSeed = params.has('seed') ? Number(params.get('seed')) : undefined;
