@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "cl.cubitos.juego"
+    namespace "cl.nmunoz.cubitos"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "cl.cubitos.juego"
+        applicationId "cl.nmunoz.cubitos"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

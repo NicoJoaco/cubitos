@@ -14,7 +14,7 @@ import { SKY_HEX, APP_NAME } from '../src/theme.ts';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const config = {
-  appId: 'cl.cubitos.juego',
+  appId: 'cl.nmunoz.cubitos',
   appName: APP_NAME,
   webDir: 'dist',
   // Sin bloque `server`: el WebView carga los archivos empaquetados. El juego

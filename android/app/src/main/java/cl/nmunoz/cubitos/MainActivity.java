@@ -1,4 +1,4 @@
-package cl.cubitos.juego;
+package cl.nmunoz.cubitos;
 
 import android.os.Build;
 import android.os.Bundle;
