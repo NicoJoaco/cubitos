@@ -1,0 +1,73 @@
+name: PWA → GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Un solo despliegue a la vez; si se empuja dos veces seguidas, gana el último
+# sin cancelar el que ya está publicando.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # El build genera los iconos por código; no hay assets binarios en el repo.
+      - name: Compilar
+        run: npm run build
+
+      # Las tres pruebas son de lógica pura y corren sin navegador: rechazo de
+      # palma, guardado con RLE y escalador de calidad. La cuarta ejecuta el
+      # Service Worker real con la red cortada.
+      - name: Pruebas
+        run: npm test
+
+      - name: Benchmark de CPU del motor
+        run: npm run bench:cpu
+
+      # Falla si el bundle pasa de 1.5 MB gzip, si aparece un host externo o si
+      # el manifest deja de cumplir los requisitos de instalación móvil.
+      - name: Reporte de métricas
+        run: node scripts/metrics.mjs
+
+      - name: Resumen en el job
+        if: always()
+        run: |
+          {
+            echo '## Métricas de la build'
+            echo '```'
+            node scripts/metrics.mjs || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

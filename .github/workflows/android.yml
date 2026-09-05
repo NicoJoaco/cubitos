@@ -1,0 +1,75 @@
+name: APK de Android
+
+on:
+  push:
+    branches: [main]
+    # Al etiquetar una versión, el APK queda además colgado de la Release, que
+    # no caduca a los 90 días como los artifacts.
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Gradle 8.2 + AGP 8 exigen JDK 17.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - run: npm ci
+
+      - name: Compilar la web y sincronizar Capacitor
+        run: npm run cap:sync
+
+      - name: Comprobar que los assets llegaron al APK
+        run: |
+          test -f android/app/src/main/assets/public/index.html
+          test -f android/app/src/main/assets/public/sw.js
+          echo "assets sincronizados: $(find android/app/src/main/assets/public -type f | wc -l) archivos"
+
+      # Debug keystore: Android genera una automáticamente. Es suficiente para
+      # instalar de costado; NO sirve para publicar en Play.
+      - name: Construir APK de depuración
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Tamaño del APK
+        run: |
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          SIZE=$(du -k "$APK" | cut -f1)
+          echo "APK: ${SIZE} KB"
+          {
+            echo '## APK'
+            echo "- tamaño: ${SIZE} KB"
+            echo "- ruta: \`$APK\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cubitos-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          # 90 días es el máximo de GitHub; pasado eso hay que relanzar el workflow.
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Adjuntar a la Release si es una etiqueta
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/debug/app-debug.apk

@@ -1,0 +1,36 @@
+{
+  "name": "cubitos",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run icons && tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "icons": "node scripts/gen-icons.mjs",
+    "metrics": "node scripts/metrics.mjs",
+    "cap:sync": "npm run build && npm run cap:config && npm run icons:android && npx cap sync android",
+    "test:offline": "node scripts/sw-offline-test.mjs",
+    "report": "npm run build && npm test && node scripts/bench-cpu.mjs && node scripts/metrics.mjs",
+    "bench:cpu": "node scripts/bench-cpu.mjs",
+    "test:controls": "node scripts/test-controls.mjs",
+    "test:storage": "node scripts/test-storage.mjs",
+    "test": "node scripts/test-controls.mjs && node scripts/test-storage.mjs && node scripts/test-quality.mjs && node scripts/sw-offline-test.mjs",
+    "test:quality": "node scripts/test-quality.mjs",
+    "icons:android": "node scripts/gen-icons.mjs --android",
+    "cap:config": "node scripts/gen-capacitor-config.mjs"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.2",
+    "@types/node": "^26.4.1",
+    "@types/three": "^0.185.4",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2",
+    "vite-plugin-pwa": "^1.3.0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/core": "^6.2.2",
+    "three": "^0.185.1"
+  }
+}

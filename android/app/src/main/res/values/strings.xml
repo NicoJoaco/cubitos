@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cubitos</string>
+    <string name="title_activity_main">Cubitos</string>
+    <string name="package_name">cl.cubitos.juego</string>
+    <string name="custom_url_scheme">cl.cubitos.juego</string>
+</resources>

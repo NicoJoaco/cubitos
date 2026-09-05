@@ -1,0 +1,13 @@
+node_modules
+dist
+dev-dist
+android/app/build
+android/build
+android/.gradle
+android/local.properties
+android/app/src/main/assets/public
+android/app/src/main/res/xml/config.xml
+*.log
+.DS_Store
+public/icons
+metrics/*.json

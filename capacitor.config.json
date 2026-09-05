@@ -1,0 +1,18 @@
+{
+  "appId": "cl.cubitos.juego",
+  "appName": "Cubitos",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#7fc7ea"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#7fc7ea",
+      "showSpinner": false
+    }
+  }
+}

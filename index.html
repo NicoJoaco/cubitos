@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#7fc7ea" />
+<meta name="color-scheme" content="light" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Cubitos" />
+<meta name="format-detection" content="telephone=no" />
+<title>Cubitos</title>
+<style>
+  :root{
+    --sky:#7fc7ea;
+    /* Muesca / gestos del sistema. Nada interactivo puede vivir aquí. */
+    --sat:env(safe-area-inset-top,0px);
+    --sar:env(safe-area-inset-right,0px);
+    --sab:env(safe-area-inset-bottom,0px);
+    --sal:env(safe-area-inset-left,0px);
+  }
+  html,body{
+    margin:0;padding:0;width:100%;height:100%;
+    background:var(--sky);
+    overflow:hidden;
+    overscroll-behavior:none;              /* mata el pull-to-refresh */
+    touch-action:none;                     /* mata el doble-tap-zoom y el pan */
+    -webkit-user-select:none;user-select:none;
+    -webkit-touch-callout:none;            /* mata el menú de "copiar/compartir" */
+    -webkit-tap-highlight-color:transparent;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    color:#123;
+  }
+  *{touch-action:none;-webkit-user-select:none;user-select:none;box-sizing:border-box}
+  #game{display:block;position:fixed;inset:0;width:100%;height:100%;background:var(--sky)}
+  #ui{position:fixed;inset:0;pointer-events:none;
+      padding:var(--sat) var(--sar) var(--sab) var(--sal)}
+  #boot{position:fixed;inset:0;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;gap:18px;background:var(--sky);
+        transition:opacity .35s ease;z-index:50}
+  #boot.gone{opacity:0;pointer-events:none}
+  #boot .cube{width:96px;height:96px;image-rendering:pixelated;
+              animation:bob 1.4s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-14px) rotate(4deg)}}
+  #boot .msg{font-size:20px;font-weight:700;letter-spacing:.5px;color:#1b3d4d;
+             text-shadow:0 1px 0 rgba(255,255,255,.5)}
+  #boot .bar{width:56vw;max-width:320px;height:14px;border-radius:999px;
+             background:rgba(255,255,255,.45);overflow:hidden}
+  #boot .bar i{display:block;height:100%;width:0%;border-radius:999px;
+               background:#4fa03c;transition:width .2s linear}
+  .noscript{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center}
+</style>
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="ui"></div>
+  <div id="boot">
+    <img class="cube" src="./icons/maskable-192.png" alt="" />
+    <div class="msg" id="boot-msg">Cargando el mundo…</div>
+    <div class="bar"><i id="boot-bar"></i></div>
+  </div>
+  <noscript><div class="noscript">Activa JavaScript para jugar.</div></noscript>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
