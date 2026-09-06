@@ -66,6 +66,16 @@ function hasTree(wx: number, wz: number, seed: number): boolean {
 
 const LEAF_R = 2;
 
+/** ¿Esta columna queda tapada por la copa de algun arbol vecino? */
+function underCanopy(wx: number, wz: number, seed: number): boolean {
+  for (let dz = -LEAF_R; dz <= LEAF_R; dz++) {
+    for (let dx = -LEAF_R; dx <= LEAF_R; dx++) {
+      if (hasTree(wx + dx, wz + dz, seed)) return true;
+    }
+  }
+  return false;
+}
+
 export function generateChunk(chunk: Chunk, seed: number): void {
   const { blocks, cx, cz } = chunk;
   blocks.fill(Block.Air);
@@ -155,6 +165,9 @@ export function findSpawn(seed: number): { x: number; z: number } {
       const z = Math.round(Math.sin(t) * r);
       const h = surfaceHeight(x, z, seed);
       if (h < SEA_LEVEL + MARGIN) continue;
+      // Bajo una copa no: aparecer dentro de las hojas de un arbol deja la
+      // pantalla verde entera y sin ninguna referencia de donde estas.
+      if (underCanopy(x, z, seed)) continue;
 
       // La pradera es el mejor sitio para empezar: hay arboles, y madera y
       // hojas son de lo primero que un nino quiere romper.

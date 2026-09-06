@@ -28,6 +28,8 @@ export interface Game {
   /** El benchmark lo apaga para medir un nivel fijo. */
   setAutoQuality(on: boolean): void;
   save(): Promise<number>;
+  /** Teletransporta a tierra firme. Lo usa el menu de pausa. */
+  rescue(): void;
   setRenderDistance(n: number): void;
   /** Un frame completo: usado por el bucle y por el benchmark. */
   step(dt: number): void;
@@ -66,7 +68,21 @@ export async function createGame(
   const controls = createControls();
   const removeKeyboard = installKeyboard(controls.input);
   const getBlock = (x: number, y: number, z: number) => world.getBlock(x, y, z);
-  const pause = createPauseMenu(() => setPaused(false));
+  /** Deja al jugador de pie en tierra firme, sin tocar lo que haya construido. */
+  function rescue() {
+    const s = findSpawn(seed);
+    // Se genera el terreno de destino antes de mover: si no, columnTop leeria
+    // un chunk vacio y lo dejaria cayendo al vacio.
+    for (let i = 0; i < 400; i++) {
+      world.update(s.x, s.z, 16);
+      if (world.generatedLastFrame === 0 && world.meshedLastFrame === 0) break;
+    }
+    player.pos.set(s.x + 0.5, world.columnTop(s.x, s.z), s.z + 0.5);
+    player.vel.set(0, 0, 0);
+    player.pitch = 0;
+  }
+
+  const pause = createPauseMenu(() => setPaused(false), rescue);
 
   // El escalador manda sobre la resolución y la distancia; nada más las toca.
   const quality = createQualityScaler((lvl) => {
@@ -87,6 +103,7 @@ export async function createGame(
     view, world, player, controls, pause, quality,
     loop: null as unknown as Loop,
     save: () => saveSession(world, player, seed, controls.input.selected),
+    rescue,
     step,
     setRenderDistance(n: number) {
       world.renderDistance = n;

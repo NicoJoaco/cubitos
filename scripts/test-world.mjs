@@ -37,6 +37,26 @@ console.log(`\nPUNTO DE APARICION (${SEEDS} semillas)`);
 check('ninguna semilla aparece bajo el agua', underwater === 0, `${underwater} de ${SEEDS}`);
 check('todas con holgura sobre el mar', dry === SEEDS, `${dry}/${SEEDS}`);
 check('todas en pradera (hay arboles para romper)', meadow === SEEDS, `${meadow}/${SEEDS}`);
+// Aparecer dentro de la copa de un arbol deja la pantalla verde entera, sin
+// ninguna referencia de donde estas. Se comprueba generando el chunk de
+// verdad, no fiandose de la funcion de altura.
+let enArbol = 0;
+const suelos = {};
+for (let seed = 1; seed <= 150; seed++) {
+  const p = findSpawn(seed);
+  const cx = Math.floor(p.x / CHUNK_X), cz = Math.floor(p.z / CHUNK_Z);
+  const ch = new Chunk(cx, cz);
+  generateChunk(ch, seed);
+  const lx = p.x - cx * CHUNK_X, lz = p.z - cz * CHUNK_Z;
+  let top = 0;
+  for (let y = CHUNK_Y - 1; y > 0; y--) if (ch.blocks[idx(lx, y, lz)] !== Block.Air) { top = y; break; }
+  const b = ch.blocks[idx(lx, top, lz)];
+  suelos[b] = (suelos[b] || 0) + 1;
+  if (b === Block.Leaves || b === Block.Log) enArbol++;
+}
+check('nunca se aparece dentro de un arbol', enArbol === 0,
+  `${enArbol} de 150; bloques pisados: ${JSON.stringify(suelos)}`);
+
 check('el punto queda cerca del origen', distances[Math.floor(SEEDS * 0.95)] < 400,
   `mediana ${distances[Math.floor(SEEDS / 2)].toFixed(0)}, p95 ${distances[Math.floor(SEEDS * 0.95)].toFixed(0)} bloques`);
 

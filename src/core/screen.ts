@@ -92,6 +92,12 @@ function installBackGuard() {
 export function installScreenGuards() {
   installBackGuard();
 
+  // En el teléfono la pausa se abre con Atrás. Con teclado, lo natural es
+  // Escape: sin esto, en un portátil no había forma de llegar al menú.
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); emit(backCbs); }
+  });
+
   // Nada de menús contextuales al apoyar el dedo, ni zoom por doble tap.
   document.addEventListener('contextmenu', (e) => e.preventDefault());
   document.addEventListener('gesturestart', (e) => e.preventDefault());

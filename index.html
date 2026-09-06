@@ -49,6 +49,17 @@
              background:rgba(255,255,255,.45);overflow:hidden}
   #boot .bar i{display:block;height:100%;width:0%;border-radius:999px;
                background:#4fa03c;transition:width .2s linear}
+  /* Ayuda de la pantalla de carga. Es HTML estatico: no cuesta ni un byte de
+     JavaScript y es lo primero que ve cualquiera que abra el juego. */
+  #boot .ayuda{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 34px;
+      max-width:min(92vw,680px);color:#1b3d4d;font-size:13px;line-height:1.5;
+      margin-top:6px;text-align:left}
+  #boot .ayuda .col{display:flex;flex-direction:column;gap:2px}
+  #boot .ayuda b{font-size:13px;letter-spacing:.3px}
+  #boot .ayuda i{font-style:normal;display:inline-block;min-width:18px;
+      text-align:center;background:rgba(255,255,255,.65);border-radius:5px;padding:0 3px}
+  #boot .ayuda .nota{flex-basis:100%;text-align:center;opacity:.75;font-size:12px;margin-top:2px}
+  @media (max-height:340px){#boot .ayuda{display:none}}
   .noscript{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center}
 </style>
 </head>
@@ -59,6 +70,21 @@
     <img class="cube" src="./icons/maskable-192.png" alt="" />
     <div class="msg" id="boot-msg">Cargando el mundo…</div>
     <div class="bar"><i id="boot-bar"></i></div>
+    <div class="ayuda">
+      <div class="col">
+        <b>En el celular</b>
+        <span>Dedo abajo a la izquierda para caminar</span>
+        <span>Arrastrar en el resto para mirar</span>
+        <span>Botones: <i>&#10006;</i> romper &nbsp; <i>&#10010;</i> poner &nbsp; <i>&#8593;</i> saltar</span>
+      </div>
+      <div class="col">
+        <b>En la computadora</b>
+        <span>W A S D o flechas para caminar</span>
+        <span>Arrastrar con el mouse para mirar</span>
+        <span>Clic izquierdo rompe &nbsp; clic derecho pone</span>
+      </div>
+      <div class="nota">Se apunta con la cruz del centro. Arriba se elige el cubo.</div>
+    </div>
   </div>
   <noscript><div class="noscript">Activa JavaScript para jugar.</div></noscript>
   <script type="module" src="/src/main.ts"></script>

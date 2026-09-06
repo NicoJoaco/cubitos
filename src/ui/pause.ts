@@ -33,7 +33,13 @@ export interface PauseMenu {
   dispose(): void;
 }
 
-export function createPauseMenu(onResume: () => void): PauseMenu {
+/**
+ * @param onRescue lleva al jugador a tierra firme. Es la salida para cuando
+ *   alguien acaba en mitad del mar o metido en un agujero del que no sabe
+ *   salir: sin esto, la unica via era escribir un parametro raro en la URL, y
+ *   eso no es algo que se le pueda pedir a nadie, y menos a un nino.
+ */
+export function createPauseMenu(onResume: () => void, onRescue: () => void): PauseMenu {
   const style = document.createElement('style');
   style.textContent = CSS;
   document.head.appendChild(style);
@@ -45,6 +51,7 @@ export function createPauseMenu(onResume: () => void): PauseMenu {
       <h1>Juego en pausa</h1>
       <button id="pause-resume">Seguir jugando</button>
       <button id="pause-sound" class="sec"></button>
+      <button id="pause-rescue" class="sec">Llevarme a tierra firme</button>
       <div class="saved" id="pause-saved"></div>
     </div>`;
   document.body.appendChild(root);
@@ -66,6 +73,14 @@ export function createPauseMenu(onResume: () => void): PauseMenu {
   };
 
   (root.querySelector('#pause-resume') as HTMLElement).addEventListener('click', () => {
+    menu.hide();
+    onResume();
+  });
+
+  (root.querySelector('#pause-rescue') as HTMLElement).addEventListener('click', () => {
+    onRescue();
+    sfxSelect();
+    menu.setSaved('Ya estas en tierra firme');
     menu.hide();
     onResume();
   });
