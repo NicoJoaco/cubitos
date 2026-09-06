@@ -5,6 +5,7 @@
  *   node scripts/test-storage.mjs
  */
 import { rleEncode, rleDecode } from '../src/core/storage.ts';
+import { planSession } from '../src/core/session.ts';
 import { CHUNK_VOLUME, CHUNK_X, CHUNK_Y, CHUNK_Z, idx } from '../src/world/constants.ts';
 import { Chunk, generateChunk } from '../src/world/chunk.ts';
 import { rand2 } from '../src/world/noise.ts';
@@ -18,7 +19,6 @@ const same = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
 
 console.log('');
 console.log('PRUEBAS DE GUARDADO');
-console.log('='.repeat(64));
 
 console.log('\nIDA Y VUELTA DEL RLE');
 const cases = {
@@ -70,6 +70,35 @@ check('el peor caso nunca infla: se guarda crudo',
   `${worst.length} B → ${rleEncode(worst).length} B`);
 check('dimensiones del chunk coherentes', CHUNK_X * CHUNK_Y * CHUNK_Z === CHUNK_VOLUME);
 
+// --------------------------------------------------------- plan de arranque
+// Cambiar de semilla debe borrar el disco. Si no, los chunks del mundo viejo
+// (indexados por coordenada) reaparecen sobre el terreno nuevo: trozos de la
+// casa anterior flotando en mitad de la nada.
+console.log('\nPLAN DE ARRANQUE (semilla de la URL vs mundo guardado)');
+const guardado = { seed: 500, savedAt: 0, player: { x: 1, y: 2, z: 3, yaw: 0, pitch: 0, selected: 1 } };
+const fijo = () => 999;
+
+const casos = [
+  ['sin nada guardado y sin semilla en la URL', null, undefined,
+    { seed: 999, wipe: false, keepEdits: false, keepPlayer: false }],
+  ['sin nada guardado, con semilla en la URL', null, 42,
+    { seed: 42, wipe: false, keepEdits: false, keepPlayer: false }],
+  ['mundo guardado, sin semilla en la URL', guardado, undefined,
+    { seed: 500, wipe: false, keepEdits: true, keepPlayer: true }],
+  ['mundo guardado, MISMA semilla en la URL', guardado, 500,
+    { seed: 500, wipe: false, keepEdits: true, keepPlayer: true }],
+  ['mundo guardado, OTRA semilla en la URL', guardado, 77,
+    { seed: 77, wipe: true, keepEdits: false, keepPlayer: false }],
+];
+
+for (const [nombre, meta, forced, esperado] of casos) {
+  const p = planSession(meta, forced, fijo);
+  const ok = Object.entries(esperado).every(([k, v]) => p[k] === v);
+  check(nombre, ok,
+    `semilla ${p.seed}, borrar=${p.wipe}, conservar construccion=${p.keepEdits}`);
+}
+
 console.log('='.repeat(64));
 console.log(failed ? `${failed} prueba(s) fallando` : 'todas las pruebas en verde');
 process.exit(failed ? 1 : 0);
+

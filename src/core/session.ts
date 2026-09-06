@@ -18,6 +18,39 @@ export interface Session {
 /** Semilla nueva y estable: se guarda con el mundo para poder regenerarlo. */
 const newSeed = () => (Math.random() * 0x7fffffff) | 0;
 
+export interface SessionPlan {
+  seed: number;
+  /** Borrar los chunks guardados: pertenecen a otro terreno. */
+  wipe: boolean;
+  /** Cargar del disco lo que el jugador construyo. */
+  keepEdits: boolean;
+  /** Retomar la posicion guardada en vez de buscar un sitio donde aparecer. */
+  keepPlayer: boolean;
+}
+
+/**
+ * Que hacer al arrancar, en funcion de lo guardado y de la semilla de la URL.
+ * Es una funcion pura para poder probar la tabla completa sin IndexedDB: la
+ * regla de cuando hay que borrar el disco es facil de romper sin darse cuenta,
+ * y romperla mezcla dos mundos.
+ */
+export function planSession(
+  meta: WorldMeta | null,
+  forcedSeed: number | undefined,
+  random: () => number = newSeed,
+): SessionPlan {
+  if (!meta) {
+    // Primera partida. No hay nada que borrar ni que conservar.
+    return { seed: forcedSeed ?? random(), wipe: false, keepEdits: false, keepPlayer: false };
+  }
+  if (forcedSeed !== undefined && forcedSeed !== meta.seed) {
+    // Otra semilla es otro mundo. Los chunks se indexan por coordenada, asi
+    // que dejarlos ahi haria que reaparecieran encima del terreno nuevo.
+    return { seed: forcedSeed, wipe: true, keepEdits: false, keepPlayer: false };
+  }
+  return { seed: meta.seed, wipe: false, keepEdits: true, keepPlayer: true };
+}
+
 export async function loadSession(forcedSeed?: number): Promise<Session> {
   const persistent = await storage.available();
   if (!persistent) {
@@ -25,19 +58,24 @@ export async function loadSession(forcedSeed?: number): Promise<Session> {
   }
 
   const meta = await storage.loadMeta();
-  // Una semilla forzada por URL crea un mundo distinto: no se le aplican las
-  // ediciones del mundo guardado, que pertenecen a otro terreno.
-  if (forcedSeed !== undefined && meta && meta.seed !== forcedSeed) {
-    return { seed: forcedSeed, edits: new Map(), player: null, persistent: true };
+  const plan = planSession(meta, forcedSeed);
+
+  if (plan.wipe) await storage.clear();
+
+  const edits = new Map<string, Uint8Array>();
+  if (plan.keepEdits) {
+    for (const key of await storage.loadAllChunkKeys()) {
+      const blocks = await storage.loadChunk(key, CHUNK_VOLUME);
+      if (blocks) edits.set(key, blocks);
+    }
   }
 
-  const seed = forcedSeed ?? meta?.seed ?? newSeed();
-  const edits = new Map<string, Uint8Array>();
-  for (const key of await storage.loadAllChunkKeys()) {
-    const blocks = await storage.loadChunk(key, CHUNK_VOLUME);
-    if (blocks) edits.set(key, blocks);
-  }
-  return { seed, edits, player: meta?.player ?? null, persistent: true };
+  return {
+    seed: plan.seed,
+    edits,
+    player: plan.keepPlayer ? (meta?.player ?? null) : null,
+    persistent: true,
+  };
 }
 
 /** Vuelca lo pendiente. Devuelve cuántos chunks se escribieron. */
